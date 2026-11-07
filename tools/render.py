@@ -1,32 +1,32 @@
-"""Renderiza las escenas (dist/<pelaje>/<estado>.gif) a partir de assets/gatos.
+"""Renders the scenes (dist/<coat>/<state>.gif) from assets/cats.
 
-    python tools/render.py            # todos los pelajes
-    python tools/render.py naranja    # solo uno
+    python tools/render.py            # every coat
+    python tools/render.py orange    # one coat
 
-Escena de 480x200, fondo transparente y vacia, loop continuo. Con 0 commits el gato
-duerme; con mas, camina por todo el espacio (horizontal y vertical), se sienta de vez
-en cuando, y cuanto mas commits, mas grande es.
+480x200 scene, transparent and empty, looping forever. With 0 commits the cat
+sleeps; with more it walks the whole space (horizontally and vertically), sits down
+now and then, and the more commits, the bigger it is.
 """
 import math, os, sys
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-W, H, STEP = 480, 200, 100  # lienzo y ms por frame
-COATS = ["gris", "naranja", "calico", "siames", "blanco", "esmoquin", "negro", "atigrado"]
+W, H, STEP = 480, 200, 100  # canvas and ms per frame
+COATS = ["gray", "orange", "calico", "siamese", "white", "tuxedo", "black", "tabby"]
 LEVELS = ["sleep", "small", "medium", "large"]
-SCALE = {"sleep": 1.0, "small": 1.0, "medium": 1.5, "large": 2.0}   # 1.0 = sprite a mitad del original
+SCALE = {"sleep": 1.0, "small": 1.0, "medium": 1.5, "large": 2.0}   # 1.0 = sprite at half the original size
 SLEEP_AT = (240, 192)
 
-# Ruta normalizada (fx, fy, animacion | None); fx/fy en 0..1 sobre el area que le queda
-# libre al gato segun su tamano. Cierra el ciclo sola.
-ROUTE = [(0.08, 0.95, "sentado"), (0.35, 0.15, None), (0.62, 0.65, None), (0.92, 0.1, "sentado"),
-         (0.95, 0.95, None), (0.55, 0.9, "sentado"), (0.22, 0.5, None)]
+# Normalized route (fx, fy, animation | None); fx/fy in 0..1 over the area left
+# free for the cat at its size. It closes the loop by itself.
+ROUTE = [(0.08, 0.95, "sitting"), (0.35, 0.15, None), (0.62, 0.65, None), (0.92, 0.1, "sitting"),
+         (0.95, 0.95, None), (0.55, 0.9, "sitting"), (0.22, 0.5, None)]
 
 
 # ---------- sprites ----------
 def load(coat, anim, scale):
-    """Frames recortados al bbox comun, escalados (NEAREST). El arte original esta a 2x."""
-    im = Image.open(f"{ROOT}/assets/gatos/{coat}/{anim}.gif")
+    """Frames cropped to a common bbox and scaled (NEAREST). The source art is at 2x."""
+    im = Image.open(f"{ROOT}/assets/cats/{coat}/{anim}.gif")
     raw = []
     for i in range(im.n_frames):
         im.seek(i)
@@ -41,7 +41,7 @@ def load(coat, anim, scale):
 
 def clip(coat, anim, scale, walk=False):
     raw = load(coat, anim, scale)
-    if walk:  # ciclo corto (50 ms/frame): se muestrea cada 100 ms
+    if walk:  # short cycle (50 ms/frame): sampled every 100 ms
         return [f for f, _ in raw]
     seq = []
     for im, (_, d) in zip([f for f, _ in raw], raw):
@@ -49,7 +49,7 @@ def clip(coat, anim, scale, walk=False):
     return seq
 
 
-# ---------- escenas ----------
+# ---------- scenes ----------
 def compose(spr, x, y, flip):
     c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     s = spr.transpose(Image.FLIP_LEFT_RIGHT) if flip else spr
@@ -57,13 +57,13 @@ def compose(spr, x, y, flip):
     return c
 
 def scene_sleep(coat):
-    return [compose(s, SLEEP_AT[0], SLEEP_AT[1], False) for s in clip(coat, "dormido", SCALE["sleep"])]
+    return [compose(s, SLEEP_AT[0], SLEEP_AT[1], False) for s in clip(coat, "sleeping", SCALE["sleep"])]
 
 def scene_walk(coat, level):
     k = SCALE[level]
-    sit, walk = clip(coat, "sentado", k), clip(coat, "caminando", k, walk=True)
+    sit, walk = clip(coat, "sitting", k), clip(coat, "walking", k, walk=True)
     sw, sh = max(f.width for f in sit + walk), max(f.height for f in sit + walk)
-    xa, xb = sw / 2 + 6, W - sw / 2 - 6          # area libre de los pies
+    xa, xb = sw / 2 + 6, W - sw / 2 - 6          # free area for the feet
     ya, yb = sh + 4, H - 4
     pts = [(xa + fx * (xb - xa), ya + fy * (yb - ya), a) for fx, fy, a in ROUTE]
     speed = 3.0 * k

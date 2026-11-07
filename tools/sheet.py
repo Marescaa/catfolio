@@ -1,4 +1,4 @@
-"""Genera docs/coats-light.png y docs/coats-dark.png: todos los pelajes en cada estado."""
+"""Builds docs/coats-light.png and docs/coats-dark.png: every coat in every state."""
 import os, sys
 from PIL import Image, ImageDraw, ImageFont
 
@@ -18,8 +18,8 @@ def font(size):
 
 def still(coat, state):
     if state == "sleep":
-        return R.clip(coat, "dormido", R.SCALE["sleep"])[0]
-    return R.clip(coat, "sentado", R.SCALE[state])[0]
+        return R.clip(coat, "sleeping", R.SCALE["sleep"])[0]
+    return R.clip(coat, "sitting", R.SCALE[state])[0]
 
 def sheet(dark):
     bg, fg, muted = ((13, 17, 23), (230, 237, 243), (139, 151, 168)) if dark else ((255, 255, 255), (28, 35, 48), (91, 102, 120))

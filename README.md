@@ -1,87 +1,90 @@
-# catfolio
+# Catfolio
 
-Un gatito pixel-art para el README de tu perfil. Se mueve por una escena en loop
-y cambia de ánimo según tus commits de los últimos 7 días. Inspirado en
-[git-koi](https://docs.rs/crate/git-koi/latest).
-
-<p align="center">
-  <img src="dist/naranja/medium.gif" width="480" alt="Gato naranja paseando" />
-</p>
-
-## Estados
-
-La escena está vacía: solo el gato. Duerme si no hiciste commits y, si hiciste,
-camina por todo el espacio (horizontal y vertical) y se sienta de vez en cuando.
-Cuanto más commits, más grande.
-
-| Estado | Commits (7 días) | Qué hace |
-|---|---|---|
-| `sleep` | 0 | Duerme enroscado. |
-| `small` | 1 a 3 | Gatito chico paseando. |
-| `medium` | 4 a 9 | Más grande. |
-| `large` | 10 o más | El más grande. |
+Catfolio draws a pixel-art cat from a GitHub account's public activity. Its
+coat is your choice, its commits grow it, and a quiet week puts it to sleep. A
+nightly workflow puts the cat on a profile README as a looping GIF, the same
+tool runs from the command line, and everything it needs ships in the repo.
 
 <p align="center">
-  <img src="dist/naranja/sleep.gif" width="240" alt="sleep" />
-  <img src="dist/naranja/small.gif" width="240" alt="small" />
-  <img src="dist/naranja/medium.gif" width="240" alt="medium" />
-  <img src="dist/naranja/large.gif" width="240" alt="large" />
+  <img src="dist/orange/medium.gif" width="480" alt="An orange cat wandering around its scene" />
 </p>
 
-## Pelajes
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/coats-dark.png" />
+  <img src="docs/coats-light.png" alt="The eight coats, gray, orange, calico, siamese, white, tuxedo, black, and tabby, in each state" />
+</picture>
 
-`gris`, `naranja`, `calico`, `siames`, `blanco`, `esmoquin`, `negro`, `atigrado`.
-Cada uno está en `dist/<pelaje>/<estado>.gif`.
-
-## Uso en tu perfil
-
-1. Copiá [`examples/workflow.yml`](examples/workflow.yml) a
-   `.github/workflows/cat.yml` de tu repo de perfil (`TU_USUARIO/TU_USUARIO`) y
-   cambiá `Marescaa` por el usuario donde tengas este repo.
-2. Pegá en tu `README.md`:
-
-   ```html
-   <p align="center"><img src="cat/cat.gif" width="480" alt="Mi gato" /></p>
-   ```
-
-3. Corré el workflow una vez a mano (`Actions → gato → Run workflow`). Después se
-   actualiza solo todas las noches.
-
-### Opciones del Action
-
-| Input | Por defecto | Descripción |
-|---|---|---|
-| `coat` | `naranja` | Pelaje. |
-| `state` | `auto` | `auto` según commits, o forzar `sleep`, `small`, `medium`, `large`. |
-| `days` | `7` | Ventana de días. |
-| `login` | dueño del repo | Cuenta a consultar. |
-| `output-dir` | `cat` | Carpeta de salida (`cat.gif`, `cat.json`, `preview.html`). |
-
-## Línea de comandos
-
-```bash
-python src/git_cat.py --login TU_USUARIO --coat gris --output-dir cat   # usa GITHUB_TOKEN
-python src/git_cat.py --commits 5 --coat negro --output-dir cat         # sin red
-python src/git_cat.py --state sleep --coat calico --output-dir cat
-```
-
-Solo usa la biblioteca estándar de Python.
-
-## Estructura
+## Repository Structure
 
 ```text
 .
-├── action.yml      el GitHub Action
-├── assets/gatos/   sprites originales (sentado, lamiendose, dormido, caminando)
-├── dist/           escenas ya renderizadas, 8 pelajes x 4 estados
-├── examples/       workflow de ejemplo
-├── src/            git_cat.py: elige el estado y copia el GIF
-├── tests/          umbrales y existencia de los GIF
-└── tools/render.py regenera dist/ desde assets/ (requiere Pillow)
+├── assets/       the original sprites: sitting, walking, sleeping, licking
+├── dist/         the rendered scenes, 8 coats x 4 states
+├── docs/         the getting-started guide and the coat sheets
+├── examples/     the profile workflow
+├── src/          the git_cat.py command that picks the state and copies the GIF
+├── tests/        the state thresholds and the shipped GIFs
+├── tools/        render.py rebuilds dist/, sheet.py rebuilds the coat sheets
+└── action.yml    the GitHub Action
 ```
 
-Para regenerar las escenas: `pip install -r requirements-dev.txt && python tools/render.py`.
+## Usage
 
-## Licencia
+### States
 
-MIT. Ver [LICENSE](LICENSE).
+The scene is empty: just the cat, wandering the whole space, horizontally and
+vertically, and sitting down now and then. The loop never cuts.
+
+| State | Commits (last 7 days) | What it does |
+|---|---|---|
+| `sleep` | 0 | Sleeps curled up. |
+| `small` | 1 to 3 | A small cat on a stroll. |
+| `medium` | 4 to 9 | Bigger. |
+| `large` | 10 or more | The biggest. |
+
+<p align="center">
+  <img src="dist/orange/sleep.gif" width="240" alt="Sleeping" />
+  <img src="dist/orange/small.gif" width="240" alt="Small" />
+  <img src="dist/orange/medium.gif" width="240" alt="Medium" />
+  <img src="dist/orange/large.gif" width="240" alt="Large" />
+</p>
+
+### Coats
+
+`gray`, `orange`, `calico`, `siamese`, `white`, `tuxedo`, `black`, and `tabby`.
+Each one is in `dist/<coat>/<state>.gif`.
+
+### Requirements
+
+- For a cat on your profile README: a GitHub account. The Action runs in your
+  profile repository's workflow with its built-in token.
+- For the command line: Python 3.8 or newer. Nothing else.
+- To rebuild the scenes: Python and [Pillow](https://python-pillow.org).
+
+[docs/getting-started.md](docs/getting-started.md) walks through the Action in
+a profile workflow, the command line, and rebuilding the scenes.
+
+### Action inputs
+
+| Input | Default | Description |
+|---|---|---|
+| `coat` | `orange` | The coat. |
+| `state` | `auto` | `auto` picks it from your commits, or force `sleep`, `small`, `medium`, or `large`. |
+| `days` | `7` | How many days of commits to count. |
+| `login` | repository owner | The account to read. |
+| `output-dir` | `cat` | The folder that receives `cat.gif`, `cat.json`, and `preview.html`. |
+
+## Author
+
+**Francisco Maresca**
+
+- Email: marescafran0@gmail.com
+- GitHub: [@Marescaa](https://github.com/Marescaa)
+
+## Acknowledgements
+
+Inspired by [git-koi](https://docs.rs/crate/git-koi/latest) by Anthony Yalong.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -7,7 +7,7 @@ command line, and a rebuild of the scenes. Pick the first for a profile README.
 
 1. In your profile repository (`<you>/<you>`), copy
    [`examples/workflow.yml`](../examples/workflow.yml) to
-   `.github/workflows/cat.yml`. Change `Marescaa/catfolio@v2` to the account that
+   `.github/workflows/cat.yml`. Change `Marescaa/catfolio@v3` to the account that
    hosts this repository if you forked it.
 2. Add the cat to your `README.md`:
 
@@ -25,8 +25,8 @@ variable named `CAT_COAT`.
 ## The command line
 
 ```bash
-python src/git_cat.py --login <you> --coat gris --output-dir cat   # reads GITHUB_TOKEN
-python src/git_cat.py --commits 5 --coat negro --output-dir cat    # no network
+python src/git_cat.py --login <you> --coat gray --output-dir cat   # reads GITHUB_TOKEN
+python src/git_cat.py --commits 5 --coat black --output-dir cat    # no network
 python src/git_cat.py --state sleep --coat calico --output-dir cat
 ```
 
@@ -41,7 +41,7 @@ sizes, or the canvas, edit `tools/render.py` and run:
 ```bash
 pip install -r requirements-dev.txt
 python tools/render.py            # every coat
-python tools/render.py naranja    # one coat
+python tools/render.py orange    # one coat
 python tools/sheet.py             # the coat sheets in docs/
 ```
 

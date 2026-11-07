@@ -9,8 +9,8 @@ inputs:
     description: Account whose commits are counted.
     default: ${{ github.repository_owner }}
   coat:
-    description: Coat - gris, naranja, calico, siames, blanco, esmoquin, negro or atigrado.
-    default: naranja
+    description: Coat - gray, orange, calico, siamese, white, tuxedo, black or tabby.
+    default: orange
   state:
     description: auto (from your commits), or force sleep, small, medium or large.
     default: auto

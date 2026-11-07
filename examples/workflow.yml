@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Marescaa/catfolio@v2
+      - uses: Marescaa/catfolio@v3
         with:
-          coat: naranja
+          coat: orange
       - name: Commit the cat if it changed
         run: |
           git config user.name "catfolio"
