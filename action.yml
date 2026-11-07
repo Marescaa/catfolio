@@ -1,0 +1,42 @@
+name: catfolio
+description: Pone en tu README un gatito pixel-art que se mueve segun tus commits de la ultima semana.
+branding:
+  icon: heart
+  color: orange
+
+inputs:
+  login:
+    description: Cuenta cuyos commits se cuentan.
+    default: ${{ github.repository_owner }}
+  coat:
+    description: Pelaje - gris, naranja, calico, siames, blanco, esmoquin, negro o atigrado.
+    default: naranja
+  state:
+    description: auto (segun commits), o forzar sleep, calm, happy o joyful.
+    default: auto
+  days:
+    description: Ventana de dias para contar commits.
+    default: "7"
+  output-dir:
+    description: Carpeta (relativa al workspace) que recibe cat.gif, cat.json y preview.html.
+    default: cat
+  token:
+    description: Token para leer la actividad publica; alcanza con el integrado.
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Elegir y copiar el gato
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        CAT_LOGIN: ${{ inputs.login }}
+        CAT_COAT: ${{ inputs.coat }}
+        CAT_STATE: ${{ inputs.state }}
+        CAT_DAYS: ${{ inputs.days }}
+        CAT_OUT: ${{ inputs.output-dir }}
+      run: >
+        python3 "$GITHUB_ACTION_PATH/src/git_cat.py"
+        --login "$CAT_LOGIN" --coat "$CAT_COAT" --state "$CAT_STATE"
+        --days "$CAT_DAYS" --output-dir "$CAT_OUT"
