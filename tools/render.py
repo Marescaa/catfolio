@@ -1,135 +1,83 @@
-"""Renderiza las escenas (dist/<pelaje>/<nivel>.gif) a partir de assets/gatos.
+"""Renderiza las escenas (dist/<pelaje>/<estado>.gif) a partir de assets/gatos.
 
     python tools/render.py            # todos los pelajes
     python tools/render.py naranja    # solo uno
 
-Escena de 480x176, fondo transparente, loop continuo. El gato (~46x62 px) recorre
-el espacio en horizontal y vertical, se detiene en cosas y vuelve al inicio.
+Escena de 480x200, fondo transparente y vacia, loop continuo. Con 0 commits el gato
+duerme; con mas, camina por todo el espacio (horizontal y vertical), se sienta de vez
+en cuando, y cuanto mas commits, mas grande es.
 """
 import math, os, sys
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-W, H, STEP = 480, 176, 100  # lienzo y ms por frame
+W, H, STEP = 480, 200, 100  # lienzo y ms por frame
 COATS = ["gris", "naranja", "calico", "siames", "blanco", "esmoquin", "negro", "atigrado"]
-LEVELS = ["sleep", "calm", "happy", "joyful"]
-PINK = (255, 92, 122, 255)
-HEART = ["0110110", "1111111", "1111111", "0111110", "0011100", "0001000"]
+LEVELS = ["sleep", "small", "medium", "large"]
+SCALE = {"sleep": 1.0, "small": 1.0, "medium": 1.5, "large": 2.0}   # 1.0 = sprite a mitad del original
+SLEEP_AT = (240, 192)
 
-# (parada, animacion al llegar)
-ROUTES = {
-    "calm":   [("C", "sentado"), ("P", "sentado"), ("Y", "sentado"), ("B", "sentado")],
-    "happy":  [("C", "sentado"), ("B", "lamiendose"), ("Y", "sentado"), ("Q", "lamiendose"), ("P", "sentado")],
-    "joyful": [("C", "sentado"), ("R", "lamiendose"), ("P", "sentado"), ("Y", "lamiendose"),
-               ("Q", "sentado"), ("B", "lamiendose")],
-}
-SPEED = {"calm": 3.0, "happy": 3.5, "joyful": 4.0}     # px por frame
-HEARTS = {"calm": 0, "happy": 2, "joyful": 4}
-STOPS = {"C": (70, 150), "Y": (350, 128), "B": (222, 164), "P": (200, 112), "Q": (430, 166), "R": (120, 118)}
+# Ruta normalizada (fx, fy, animacion | None); fx/fy en 0..1 sobre el area que le queda
+# libre al gato segun su tamano. Cierra el ciclo sola.
+ROUTE = [(0.08, 0.95, "sentado"), (0.35, 0.15, None), (0.62, 0.65, None), (0.92, 0.1, "sentado"),
+         (0.95, 0.95, None), (0.55, 0.9, "sentado"), (0.22, 0.5, None)]
 
 
 # ---------- sprites ----------
-def half(im):  # el arte original esta a 2x
-    return im.convert("RGBA").resize((im.width // 2, im.height // 2), Image.NEAREST)
-
-def load(coat, anim):
+def load(coat, anim, scale):
+    """Frames recortados al bbox comun, escalados (NEAREST). El arte original esta a 2x."""
     im = Image.open(f"{ROOT}/assets/gatos/{coat}/{anim}.gif")
-    frames = []
+    raw = []
     for i in range(im.n_frames):
         im.seek(i)
-        frames.append((half(im), im.info.get("duration", 100)))
-    return frames
-
-def clip(coat, anim, walk=False):
-    raw = load(coat, anim)
+        raw.append((im.convert("RGBA"), im.info.get("duration", 100)))
     boxes = [f.getbbox() for f, _ in raw if f.getbbox()]
     box = (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes))
-    imgs = [f.crop(box) for f, _ in raw]
-    if walk:  # ciclo corto (50 ms/frame) -> muestreo a 100 ms
-        return imgs
+    out = []
+    for f, d in raw:
+        c = f.crop(box)
+        out.append((c.resize((round(c.width * scale / 2), round(c.height * scale / 2)), Image.NEAREST), d))
+    return out
+
+def clip(coat, anim, scale, walk=False):
+    raw = load(coat, anim, scale)
+    if walk:  # ciclo corto (50 ms/frame): se muestrea cada 100 ms
+        return [f for f, _ in raw]
     seq = []
-    for im, (_, d) in zip(imgs, raw):
+    for im, (_, d) in zip([f for f, _ in raw], raw):
         seq += [im] * max(1, round(d / STEP))
     return seq
 
 
-# ---------- dibujo ----------
-def rect(c, x, y, w, h, col):
-    for yy in range(y, y + h):
-        for xx in range(x, x + w):
-            if 0 <= xx < W and 0 <= yy < H:
-                c.putpixel((xx, yy), col)
-
-def cushion(c, x, y):
-    rect(c, x - 22, y - 8, 44, 8, (196, 108, 140, 255)); rect(c, x - 18, y - 11, 36, 3, (224, 140, 170, 255))
-
-def yarn(c, x, y):
-    for dy in range(-9, 1):
-        for dx in range(-9, 10):
-            if dx * dx + (dy + 5) ** 2 <= 20:
-                c.putpixel((x + dx, y + dy), (92, 140, 220, 255))
-    rect(c, x - 3, y - 7, 6, 1, (150, 185, 245, 255)); rect(c, x + 9, y - 1, 10, 1, (92, 140, 220, 255))
-
-def bowl(c, x, y):
-    rect(c, x - 9, y - 6, 18, 6, (120, 130, 150, 255)); rect(c, x - 7, y - 7, 14, 2, (210, 170, 110, 255))
-
-PROPS = [(cushion, 70, 150), (yarn, 390, 128), (bowl, 250, 164)]
-
-def heart(c, x, y):
-    for r, row in enumerate(HEART):
-        for k, v in enumerate(row):
-            if v == "1" and 0 <= x + k < W and 0 <= y + r < H:
-                c.putpixel((x + k, y + r), PINK)
-
-def compose(spr, x, y, flip, extra=None):
+# ---------- escenas ----------
+def compose(spr, x, y, flip):
     c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     s = spr.transpose(Image.FLIP_LEFT_RIGHT) if flip else spr
-    pos = (int(x - s.width / 2), int(y - s.height))
-    drew = False
-    for fn, px, py in sorted(PROPS, key=lambda p: p[2]):  # el que esta mas atras se dibuja primero
-        if not drew and py > y:
-            c.alpha_composite(s, pos); drew = True
-        fn(c, px, py)
-    if not drew:
-        c.alpha_composite(s, pos)
-    if extra:
-        extra(c, s)
+    c.alpha_composite(s, (int(x - s.width / 2), int(y - s.height)))
     return c
 
-
-# ---------- escenas ----------
 def scene_sleep(coat):
-    seq = clip(coat, "dormido")
-    cx, cy = STOPS["C"][0], STOPS["C"][1] - 6
-    return [compose(s, cx, cy, False) for s in seq]
+    return [compose(s, SLEEP_AT[0], SLEEP_AT[1], False) for s in clip(coat, "dormido", SCALE["sleep"])]
 
 def scene_walk(coat, level):
-    idle = {a: clip(coat, a) for a in ("sentado", "lamiendose")}
-    walk = clip(coat, "caminando", walk=True)
-    stops, speed = ROUTES[level], SPEED[level]
-    steps, wi = [], 0                      # (x, y, flip, sprite, beat)
-    for i, (s, anim) in enumerate(stops):
-        x0, y0 = STOPS[s]
-        for k, spr in enumerate(idle[anim]):
-            steps.append((x0, y0, False, spr, HEARTS[level] > 0 and k == 3))
-        x1, y1 = STOPS[stops[(i + 1) % len(stops)][0]]
+    k = SCALE[level]
+    sit, walk = clip(coat, "sentado", k), clip(coat, "caminando", k, walk=True)
+    sw, sh = max(f.width for f in sit + walk), max(f.height for f in sit + walk)
+    xa, xb = sw / 2 + 6, W - sw / 2 - 6          # area libre de los pies
+    ya, yb = sh + 4, H - 4
+    pts = [(xa + fx * (xb - xa), ya + fy * (yb - ya), a) for fx, fy, a in ROUTE]
+    speed = 3.0 * k
+    steps, wi = [], 0
+    for i, (x0, y0, anim) in enumerate(pts):
+        if anim:
+            steps += [(x0, y0, False, spr) for spr in sit]
+        x1, y1, _ = pts[(i + 1) % len(pts)]
         n = max(1, int(math.hypot(x1 - x0, y1 - y0) / speed))
-        for k in range(n):
-            p = (k + 1) / n
-            steps.append((x0 + (x1 - x0) * p, y0 + (y1 - y0) * p, x1 < x0, walk[(wi * 2) % len(walk)], False)); wi += 1
-    total, nh = len(steps), HEARTS[level]
-    beats = [t for t, s in enumerate(steps) if s[4]]
-    frames = []
-    for t, (x, y, flip, spr, _) in enumerate(steps):
-        def hearts(c, s, t=t, x=x, y=y):
-            for b in beats:
-                for k in range(nh):
-                    age = (t - b - k * 4) % total
-                    if age < 18:
-                        p = age / 18
-                        heart(c, int(x - 3 + (k - nh / 2) * 7 + 5 * math.sin(p * 6 + k)), int(y - s.height - 6 - p * 26))
-        frames.append(compose(spr, x, y, flip, hearts if nh else None))
-    return frames
+        for j in range(n):
+            p = (j + 1) / n
+            steps.append((x0 + (x1 - x0) * p, y0 + (y1 - y0) * p, x1 < x0, walk[(wi * 2) % len(walk)])); wi += 1
+    return [compose(spr, x, y, flip) for x, y, flip, spr in steps]
+
 
 def save(frames, path):
     rgb = []
@@ -151,6 +99,7 @@ def save(frames, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     outs[0].save(path, save_all=True, append_images=outs[1:], duration=STEP, loop=0,
                  transparency=255, disposal=2, optimize=False)
+
 
 def main(coats):
     for coat in coats:

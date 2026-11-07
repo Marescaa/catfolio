@@ -8,12 +8,12 @@ import git_cat  # noqa: E402
 
 class Levels(unittest.TestCase):
     def test_thresholds(self):
-        for n, lv in [(0, "calm"), (2, "calm"), (3, "happy"), (6, "happy"), (7, "joyful"), (50, "joyful")]:
+        for n, lv in [(0, "sleep"), (1, "small"), (3, "small"), (4, "medium"), (9, "medium"), (10, "large"), (50, "large")]:
             self.assertEqual(git_cat.level_for(n), lv)
 
     def test_every_gif_exists(self):
         for c in git_cat.COATS:
-            for s in ("sleep", "calm", "happy", "joyful"):
+            for s in ("sleep", "small", "medium", "large"):
                 self.assertTrue(os.path.exists(os.path.join(git_cat.ROOT, "dist", c, f"{s}.gif")), (c, s))
 
 

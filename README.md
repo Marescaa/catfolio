@@ -5,22 +5,27 @@ y cambia de ánimo según tus commits de los últimos 7 días. Inspirado en
 [git-koi](https://docs.rs/crate/git-koi/latest).
 
 <p align="center">
-  <img src="dist/naranja/happy.gif" width="480" alt="Gato naranja paseando" />
+  <img src="dist/naranja/medium.gif" width="480" alt="Gato naranja paseando" />
 </p>
 
 ## Estados
 
+La escena está vacía: solo el gato. Duerme si no hiciste commits y, si hiciste,
+camina por todo el espacio (horizontal y vertical) y se sienta de vez en cuando.
+Cuanto más commits, más grande.
+
 | Estado | Commits (7 días) | Qué hace |
 |---|---|---|
-| `sleep` | solo manual | Duerme sobre el cojín. |
-| `calm` | 0 a 2 | Pasea despacio y se sienta en cada parada. |
-| `happy` | 3 a 6 | Camina más ágil, se lame la pata y salen corazones. |
-| `joyful` | 7 o más | Más paradas y más corazones. |
+| `sleep` | 0 | Duerme enroscado. |
+| `small` | 1 a 3 | Gatito chico paseando. |
+| `medium` | 4 a 9 | Más grande. |
+| `large` | 10 o más | El más grande. |
 
 <p align="center">
-  <img src="dist/naranja/sleep.gif" width="300" alt="sleep" />
-  <img src="dist/naranja/calm.gif" width="300" alt="calm" />
-  <img src="dist/naranja/joyful.gif" width="300" alt="joyful" />
+  <img src="dist/naranja/sleep.gif" width="240" alt="sleep" />
+  <img src="dist/naranja/small.gif" width="240" alt="small" />
+  <img src="dist/naranja/medium.gif" width="240" alt="medium" />
+  <img src="dist/naranja/large.gif" width="240" alt="large" />
 </p>
 
 ## Pelajes
@@ -47,7 +52,7 @@ Cada uno está en `dist/<pelaje>/<estado>.gif`.
 | Input | Por defecto | Descripción |
 |---|---|---|
 | `coat` | `naranja` | Pelaje. |
-| `state` | `auto` | `auto` según commits, o forzar `sleep`, `calm`, `happy`, `joyful`. |
+| `state` | `auto` | `auto` según commits, o forzar `sleep`, `small`, `medium`, `large`. |
 | `days` | `7` | Ventana de días. |
 | `login` | dueño del repo | Cuenta a consultar. |
 | `output-dir` | `cat` | Carpeta de salida (`cat.gif`, `cat.json`, `preview.html`). |

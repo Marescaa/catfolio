@@ -17,7 +17,7 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COATS = ["gris", "naranja", "calico", "siames", "blanco", "esmoquin", "negro", "atigrado"]
-STATES = ["auto", "sleep", "calm", "happy", "joyful"]
+STATES = ["auto", "sleep", "small", "medium", "large"]
 
 QUERY = """query($login:String!,$from:DateTime!,$to:DateTime!){
   user(login:$login){contributionsCollection(from:$from,to:$to){
@@ -25,10 +25,12 @@ QUERY = """query($login:String!,$from:DateTime!,$to:DateTime!){
 
 
 def level_for(commits):
-    """0-2 calm, 3-6 happy, 7+ joyful. 'sleep' solo se elige a mano."""
-    if commits <= 2:
-        return "calm"
-    return "happy" if commits <= 6 else "joyful"
+    """0 sleep, 1-3 small, 4-9 medium, 10+ large (cuanto mas commits, mas grande)."""
+    if commits <= 0:
+        return "sleep"
+    if commits <= 3:
+        return "small"
+    return "medium" if commits <= 9 else "large"
 
 
 def count_commits(login, days, token):

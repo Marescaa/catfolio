@@ -12,7 +12,7 @@ inputs:
     description: Pelaje - gris, naranja, calico, siames, blanco, esmoquin, negro o atigrado.
     default: naranja
   state:
-    description: auto (segun commits), o forzar sleep, calm, happy o joyful.
+    description: auto (segun commits), o forzar sleep, small, medium o large.
     default: auto
   days:
     description: Ventana de dias para contar commits.
