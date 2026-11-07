@@ -1,33 +1,33 @@
 name: catfolio
-description: Pone en tu README un gatito pixel-art que se mueve segun tus commits de la ultima semana.
+description: Put a pixel-art cat on your profile README that sleeps, wanders and grows with your commits.
 branding:
   icon: heart
   color: orange
 
 inputs:
   login:
-    description: Cuenta cuyos commits se cuentan.
+    description: Account whose commits are counted.
     default: ${{ github.repository_owner }}
   coat:
-    description: Pelaje - gris, naranja, calico, siames, blanco, esmoquin, negro o atigrado.
+    description: Coat - gris, naranja, calico, siames, blanco, esmoquin, negro or atigrado.
     default: naranja
   state:
-    description: auto (segun commits), o forzar sleep, small, medium o large.
+    description: auto (from your commits), or force sleep, small, medium or large.
     default: auto
   days:
-    description: Ventana de dias para contar commits.
+    description: Number of days of commits to count.
     default: "7"
   output-dir:
-    description: Carpeta (relativa al workspace) que recibe cat.gif, cat.json y preview.html.
+    description: Folder (relative to the workspace) that receives cat.gif, cat.json and preview.html.
     default: cat
   token:
-    description: Token para leer la actividad publica; alcanza con el integrado.
+    description: Token for reading the account's public activity; the built-in token is enough.
     default: ${{ github.token }}
 
 runs:
   using: composite
   steps:
-    - name: Elegir y copiar el gato
+    - name: Pick and copy the cat
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}

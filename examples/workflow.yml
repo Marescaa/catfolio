@@ -1,7 +1,7 @@
-# Copialo a .github/workflows/cat.yml en tu repo de perfil (TU_USUARIO/TU_USUARIO).
-name: gato
+# Copy to .github/workflows/cat.yml in your profile repository (<you>/<you>).
+name: Cat
 on:
-  schedule: [{ cron: "0 3 * * *" }]   # todas las noches
+  schedule: [{ cron: "0 3 * * *" }]   # every night
   workflow_dispatch:
 permissions:
   contents: write
@@ -13,9 +13,9 @@ jobs:
       - uses: Marescaa/catfolio@v2
         with:
           coat: naranja
-      - name: Guardar
+      - name: Commit the cat if it changed
         run: |
           git config user.name "catfolio"
           git config user.email "catfolio@users.noreply.github.com"
           git add cat
-          git diff --cached --quiet || (git commit -m "chore: actualizar gato" && git push)
+          git diff --cached --quiet || (git commit -m "cat: update mood" && git push)
